@@ -1,0 +1,1 @@
+youtube-dl -F -ci https://www.youtube.com/playlist?list=PLpJTB7sffXfI3lx4MgExhficqynuImmi4
