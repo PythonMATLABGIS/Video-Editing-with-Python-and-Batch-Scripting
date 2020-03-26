@@ -1,0 +1,1 @@
+python jumpcutter.py --input_file MATLAB_Review_MIT_01.wmv --output_file MATLAB_Review_MIT_Test2_JumpCut.mp4 --sounded_speed 1 --silent_speed 9999999 --frame_margin 3
