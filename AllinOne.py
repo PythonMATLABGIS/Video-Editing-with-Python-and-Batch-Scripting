@@ -24,8 +24,8 @@ def main():
 	jumpcut_suffix = 'jcmg'+margin+'_'+silent_threshold_pc+'pc'
 #rename
 			
-#	duration_sec = 1500
-	duration_sec = 30
+	duration_sec = 1500
+#	duration_sec = 30
 	short_suffix = '_short_'
 	long_suffix = '_long_'
 	
