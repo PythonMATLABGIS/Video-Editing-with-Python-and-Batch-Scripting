@@ -50,7 +50,7 @@ def JumpCutterUltra_Py(inFile,silent_th,sound_s,silent_s,margin,outFile):
 	JumpCutterUltraFile = "C:/Davince Resolve 16/JumpCutterUltra/JumpCutterUltra.exe"
 	print(f'Running JumpCutterUltra_Py {JumpCutterUltraFile}')
 	print(f'\t Input :{inFile}; Output :{outFile}')
-	subprocess.call([JumpCutterUltraFile,'--input_file',inFile,'--silent_threshold',str(silent_th),'--sounded_speed',str(sound_s),'--silent_speed',str(silent_s),'--frame_margin',margin,'--output_file',outFile])
+	subprocess.call([JumpCutterUltraFile,'--input_file',inFile,'--silent_threshold',str(silent_th),'--sounded_speed',str(sound_s),'--silent_speed',str(silent_s),'--frame_margin',str(margin),'--output_file',outFile])
 	print(f'\t\t\t\done with {outFile}')
 ###############
 
@@ -66,8 +66,7 @@ def ffmpeg_split(inFile,outFile,start_point,duration_sec):
 ###############################################################################
 
 def split_new(inFile,duration_sec,jumpcut_suffix,short_suffix,long_suffix):
-
-	print('\n\n\n'+100*'#')
+	print(f'\t\tReport inside split_new function:')
 	start_point = 0
 	overlap_duration = 2
 	clipped_length = duration_sec + overlap_duration
@@ -75,7 +74,7 @@ def split_new(inFile,duration_sec,jumpcut_suffix,short_suffix,long_suffix):
 	in_name,in_ext = os.path.splitext(inFile)
 	inFile_length = clip_duration(inFile)
 	if inFile_length <= duration_sec+duration_sec/2 and short_suffix in inFile:
-		print(f'This video is short {inFile}, no clipping required, length: {inFile_length} sec or {get_strtime(inFile_length)}')
+		print(f'\t\t\tThis video: {inFile} is short, no clipping required, \n\t\t\tVideo length: {inFile_length} sec or {get_strtime(inFile_length)}')
 #		pass
 	if inFile_length > duration_sec+duration_sec/2 and 'split' not in inFile and long_suffix in inFile:
 		#create a text file to merge laters
@@ -109,12 +108,10 @@ def split_new(inFile,duration_sec,jumpcut_suffix,short_suffix,long_suffix):
 					start_point = i*duration_sec-overlap_duration/2
 					ffmpeg_split(inFile,outFile,start_point,clipped_length)
 					print(f'\t\t\tinFile:{inFile}\n\t\t\toutFile:{outFile}\n\t\t\tstart_point:{start_point}\n\t\t\tclipped_length:{clipped_length}')
-	print(100*'#'+'\n')
 ### rename ##########################################################
 def rename_based_on_length(inFile, duration_sec,short_suffix,long_suffix):
-	print(80*'-')
-	print('Clip_duration: {duration_sec} ~ {duration_sec/60} mins')
-	print(f'InFile: {inFile}')
+#	print('Clip_duration: {duration_sec} ~ {duration_sec/60} mins')
+#	print(f'InFile: {inFile}')
 	f_name,f_ext = os.path.splitext(inFile)
 	temp_name =f_name.replace('-','_')
 	temp_name =temp_name.replace('-','_')
@@ -135,7 +132,6 @@ def rename_based_on_length(inFile, duration_sec,short_suffix,long_suffix):
 		print(inFile,inFile_length,' ==> ',new_name)
 		os.rename(inFile, new_name)
 	else: print('Something wrong: check rename_based_on_length')
-	print(80*'-'+'\n')
 
 #############################################################################
 #% time handling functions
