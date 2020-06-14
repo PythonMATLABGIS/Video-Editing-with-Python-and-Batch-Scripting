@@ -1,1 +1,2 @@
 python AllinOne.py
+pause

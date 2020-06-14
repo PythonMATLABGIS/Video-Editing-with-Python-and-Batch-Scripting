@@ -8,12 +8,75 @@ Created on Fri Apr 10 15:40:47 2020
 import datetime
 import subprocess
 import os
-#import sys
+import sys
 import time
 from moviepy.editor import VideoFileClip
 from pyVideoLib import *
 current_dir = os.getcwd()
 
+#############################################################################
+#% time handling functions
+def get_sec(time_str):
+	"""Get Seconds from time."""
+	h, m, s = time_str.split(':')
+	return int(h) * 3600 + int(m) * 60 + int(s)
+#print(get_sec('00:30:40'))
+#print(get_sec('00:04:15'))
+#print(get_sec('00:00:25'))
+
+
+def get_sec_datetime(time_str):
+	h,m,s = time_str.split(':')
+	return int(datetime.timedelta(hours=int(h),minutes=int(m),seconds=int(s)).total_seconds())
+
+#print(get_sec_datetime('1:23:45'))
+
+
+def get_strtime(time_sec):
+	return time.strftime('%H:%M:%S', time.gmtime(time_sec))
+#get_strtime(5025)
+
+
+#########################################################################################################
+#% list all file with extentions
+def nameList_F_withExt(InputFolder,filterString="*"):
+	'''
+	pathList_F_ext(InputFolder,filterString="*")
+	list all files and folders in InputFolder
+	return a list of names for every file and folder matching folderString
+	file includes extention (ext) information
+	'''
+
+	import glob
+	os.chdir(InputFolder) #change working folder
+	return glob.glob(filterString)
+############################################################################
+
+def clip_duration(invideoF):
+	from moviepy.editor import VideoFileClip
+	clip = VideoFileClip(invideoF)
+	clip_duration = clip.duration
+	clip.close()
+	clip.close()
+	return clip_duration
+#print(clip_duration('0_20120829_matlab_ValSchmidt_split1_cut1.mp4','hms'))
+#print(clip_duration('0_20120829_matlab_ValSchmidt_split1_cut1.mp4','sec'))
+###########################################################################
+#make a dictionary of file name and length
+	#required nameList_F_withExt , clip_duration
+def name_length_dic_define(in_dir,data_type):
+	name_length_dic = {}
+	for inFile in nameList_F_withExt(in_dir,data_type):
+		inFile_length = clip_duration(inFile)
+		name_length_dic[inFile]=inFile_length
+	return name_length_dic
+#make a list of name_length_list
+def name_length_list_define(in_dir,data_type):
+	name_length_list = []
+	for inFile in nameList_F_withExt(in_dir,data_type):
+		inFile_length = clip_duration(inFile)
+		name_length_list.append([inFile,inFile_length])
+	return name_length_list
 
 def youtubedl_pyrun(inList,f):
 	youtubedl_File = "D:/Downloads/youtube-dl/youtube-dl.exe"
@@ -76,7 +139,7 @@ def split_new(inFile,duration_sec,jumpcut_suffix,short_suffix,long_suffix):
 	if inFile_length <= duration_sec+duration_sec/2 and short_suffix in inFile:
 		print(f'\t\t\tThis video: {inFile} is short, no clipping required, \n\t\t\tVideo length: {inFile_length} sec or {get_strtime(inFile_length)}')
 #		pass
-	if inFile_length > duration_sec+duration_sec/2 and 'split' not in inFile and long_suffix in inFile:
+	elif inFile_length > duration_sec+duration_sec/2 and 'split' not in inFile and long_suffix in inFile:
 		#create a text file to merge laters
 		out_ffmpeg_merge_txtf = open(in_name+'_2merge_.txt','w')
 		no_clipped_segments = int(inFile_length/duration_sec)+1
@@ -85,7 +148,8 @@ def split_new(inFile,duration_sec,jumpcut_suffix,short_suffix,long_suffix):
 			msg = 'file '+ "'"+in_name+ '_split' + str(i+1) + jumpcut_suffix +'.mp4'+"'"
 			print(msg)
 			out_ffmpeg_merge_txtf.write(msg+'\n')
-		out_ffmpeg_merge_txtf.close()
+		out_ffmpeg_merge_txtf.close() #finish creating txt files
+		
 #		for each segment
 		for i in range(no_clipped_segments):
 			outFile = in_name+ '_split' + str(i+1) + '.mp4' 			#segment name
@@ -109,21 +173,30 @@ def split_new(inFile,duration_sec,jumpcut_suffix,short_suffix,long_suffix):
 					ffmpeg_split(inFile,outFile,start_point,clipped_length)
 					print(f'\t\t\tinFile:{inFile}\n\t\t\toutFile:{outFile}\n\t\t\tstart_point:{start_point}\n\t\t\tclipped_length:{clipped_length}')
 ### rename ##########################################################
-def rename_based_on_length(inFile, duration_sec,short_suffix,long_suffix):
-#	print('Clip_duration: {duration_sec} ~ {duration_sec/60} mins')
-#	print(f'InFile: {inFile}')
+def rename_step1(inFile):
 	f_name,f_ext = os.path.splitext(inFile)
 	temp_name =f_name.replace('-','_')
 	temp_name =temp_name.replace('-','_')
 	temp_name =temp_name.replace('-','_')
+	temp_name =temp_name.replace(',','')
 	temp_name =temp_name.replace(' ','')
 	temp_name =temp_name.replace(' ','')
-	inFile_length = clip_duration(inFile)
+	new_name = temp_name+f_ext
+	try: os.rename(inFile, new_name)
+	except Exception as e:
+		print(e)
+		pass
+	
+def rename_based_on_length(inFile, duration_sec,short_suffix,long_suffix,inFile_length):
+#	print('Clip_duration: {duration_sec} ~ {duration_sec/60} mins')
+#	print(f'InFile: {inFile}')
+	f_name,f_ext = os.path.splitext(inFile)
+	temp_name =f_name
 	if (short_suffix in temp_name):
 		print(f'\t is already RENAMED and INCLUDED {short_suffix}')
 	elif (long_suffix in temp_name):
 		print(f'\t already RENAMED and INCLUDED {long_suffix}')
-	elif (inFile_length <= duration_sec+duration_sec/2) and (short_suffix not in temp_name):
+	elif (float(inFile_length) <= duration_sec+duration_sec/2) and (short_suffix not in temp_name):
 		new_name = temp_name+short_suffix+f_ext
 		print(inFile,inFile_length,' ==> ',new_name)
 		os.rename(inFile, new_name)
@@ -133,65 +206,10 @@ def rename_based_on_length(inFile, duration_sec,short_suffix,long_suffix):
 		os.rename(inFile, new_name)
 	else: print('Something wrong: check rename_based_on_length')
 
-#############################################################################
-#% time handling functions
-def get_sec(time_str):
-	"""Get Seconds from time."""
-	h, m, s = time_str.split(':')
-	return int(h) * 3600 + int(m) * 60 + int(s)
-#print(get_sec('00:30:40'))
-#print(get_sec('00:04:15'))
-#print(get_sec('00:00:25'))
-
-
-def get_sec_datetime(time_str):
-	h,m,s = time_str.split(':')
-	return int(datetime.timedelta(hours=int(h),minutes=int(m),seconds=int(s)).total_seconds())
-
-#print(get_sec_datetime('1:23:45'))
-
-
-def get_strtime(time_sec):
-	return time.strftime('%H:%M:%S', time.gmtime(time_sec))
-#get_strtime(5025)
-
-
-#########################################################################################################
-#% list all file with extentions
-def nameList_F_withExt(InputFolder,filterString="*"):
-	'''
-	pathList_F_ext(InputFolder,filterString="*")
-	list all files and folders in InputFolder
-	return a list of names for every file and folder matching folderString
-	file includes extention (ext) information
-	'''
-
-	import glob
-	os.chdir(InputFolder) #change working folder
-	return glob.glob(filterString)
-############################################################################
-
-def clip_duration(invideoF):
-	from moviepy.editor import VideoFileClip
-	clip = VideoFileClip(invideoF)
-	clip_duration = clip.duration
-	clip.close()
-	return clip_duration
-#print(clip_duration('0_20120829_matlab_ValSchmidt_split1_cut1.mp4','hms'))
-#print(clip_duration('0_20120829_matlab_ValSchmidt_split1_cut1.mp4','sec'))
-###########################################################################
-#make a dictionary of file name and length
-	#required nameList_F_withExt , clip_duration
-def name_length_dic_define(in_dir,data_type):
-	name_length_dic = {}
-	for inFile in nameList_F_withExt(in_dir,data_type):
-		inFile_length = clip_duration(inFile)
-		name_length_dic[inFile]=inFile_length
-	return name_length_dic
-#make a list of name_length_list
-def name_length_list_define(in_dir,data_type):
-	name_length_list = []
-	for inFile in nameList_F_withExt(in_dir,data_type):
-		inFile_length = clip_duration(inFile)
-		name_length_list.append([inFile,inFile_length])
-	return name_length_list
+# def clip_duration(invideoF):
+	# from moviepy.editor import VideoFileClip
+	# clip = VideoFileClip(invideoF)
+	# clip_duration = clip.duration
+	# clip.close()
+	# clip.close()
+	# return clip_duration

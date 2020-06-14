@@ -19,40 +19,81 @@ print(100*'#')
 print(100*'-')
 print(f' Working folder: {current_dir}')
 print(50*'-')
+###########################################
 def main():
 	stime = dt.now()
-###########################################
-	#overal setup
+	#-----------------------------------------------------------------------
+	#general setup
 	print(' General setup:')
-#	margin = input('Margin: ')
+	# margin = input('Margin: ')
 	margin = 1
-#	silent_threshold_pc = input('silent_threshold percent: ')
-	silent_threshold_pc = 4
+	# silent_threshold_pc = input('silent_threshold percent: ')
+	silent_threshold_pc = 5
 	jumpcut_suffix = 'jcmg'+str(margin)+'_'+str(silent_threshold_pc)+'pc'
 	print(f'\t jumpcut_suffix: {jumpcut_suffix}')
-	##########################################################
+	# duration_sec = input('duration_sec: ')
+	duration_sec = 1200
+	print(f'\t duration_sec =  {duration_sec}')
+	#-----------------------------------------------------------------------
+	#download setup
+	print(50*'-')
+	print(' Download setup:')
 	#Download using youtube-dl
 	# f = 22
-	# inList = 'https://www.youtube.com/playlist?list=PL0Fi7QPYOUT_bneUapWqIe7HevHML8thy'
-	# youtubedl_pyrun(inList,f)
-	
+	f = 'best'
+	print(f'\t f =  {f}')
+	# download_yn = input('Download (Y/N)?:')
+	download_yn = 'N'
+	print(f'\t download_yn =  {download_yn}')
+	if download_yn.upper() == 'Y':
+		inList = input('Youtube playlist to download:')
+		try: youtubedl_pyrun(inList,f)
+		except Exception as e:
+			print(e)
+			pass
+	else:
+		pass
+#	inList = 'https://www.youtube.com/playlist?list=PLG19vXLQHvSC2ZKFIkgVpI9fCjkN38kwf'
+	#youtubedl_pytest(inList)
+#	try: youtubedl_pyrun(inList,f)
+#	except Exception as e:
+#		print(e)
+#		pass
+	#-----------------------------------------------------------------------
 	#rename
+	datatype_list = ['*.mp4','*.wmv','*.mov','*.avi','*.mkv']
+	for data_type in datatype_list:
+		for inFile in nameList_F_withExt(current_dir,data_type):
+			rename_step1(inFile)
+	
+	for data_type in datatype_list:
+		data_type_temp_file = open('data_type_temp_file_'+data_type[2:]+'.txt','w')
+		for inFile in nameList_F_withExt(current_dir,data_type):
+			inFile_duration = clip_duration(inFile)
+			data_type_temp_file.write(inFile+','+str(inFile_duration)+'\n')
+		data_type_temp_file.close()
+
 	print(50*'-')
 	print(' Rename setup:')
-	duration_sec = 1500
-	print(f'\t duration_sec: {duration_sec}')
+	# duration_sec = 1200
+	duration_sec = int(duration_sec)
+	print(f'\t duration_sec: {duration_sec} or {get_strtime(duration_sec)}')
 	#	duration_sec = 30
 	short_suffix = '_short_'
 	print(f'\t short_suffix: {short_suffix}')
 	long_suffix = '_long_'
 	print(f'\t long_suffix: {long_suffix}')
-	
-	datatype_list = ['*.mp4','*.wmv','*.mov','*.avi','*.mkv']
+
 	for data_type in datatype_list:
-		for idx,inFile in enumerate(nameList_F_withExt(current_dir,data_type)):
-			rename_based_on_length(inFile, duration_sec,short_suffix,long_suffix)
-	
-	#######################
+		data_type_temp_file = 'data_type_temp_file_'+data_type[2:]+'.txt'
+		with open(data_type_temp_file,'r') as inTxtFile:
+			for counter, line in enumerate(inTxtFile):
+				inFile,inFile_length = line.split(',')
+				inFile_length = float(inFile_length)
+				print(inFile,',',str(inFile_length))
+				rename_based_on_length(inFile, duration_sec,short_suffix,long_suffix,inFile_length)
+
+	#-----------------------------------------------------------------------
 	stime_convert = dt.now()
 	print(50*'-')
 	print(' Convert to mp4 setup:')
@@ -87,7 +128,8 @@ def main():
 								pass
 						if os.path.exists(outFile): print(f'outFile is existed')
 	print('\tConverting time: %s' % (dt.now() - stime_convert))
-	#############################################
+
+	#-----------------------------------------------------------------------
 	#split
 	stime_split = dt.now()
 	print(50*'-')
@@ -104,8 +146,8 @@ def main():
 				split_new(inFile,duration_sec,jumpcut_suffix,short_suffix,long_suffix)
 				
 	print('\tSplitting time: %s' % (dt.now() - stime_split))
-	
-	#############################################
+
+	#-----------------------------------------------------------------------
 	#jumpcut
 	stime_jc = dt.now()
 	print(50*'-')
@@ -134,7 +176,8 @@ def main():
 					print(f'\tStart running JumpCutterUltra_PyoutFile to create outfile: {outFile}')
 					JumpCutterUltra_Py(inFile,silent_th,sound_s,silent_s,margin,outFile)
 	print('\tJumpcutting time: %s' % (dt.now() - stime_jc))
-	#############################################
+
+	#-----------------------------------------------------------------------
 	#merge
 	print(50*'-')
 	print(' Merge setup:')
@@ -144,7 +187,7 @@ def main():
 		for inFile in nameList_F_withExt(current_dir,'*_2merge_.txt'):
 			f_name,f_ext = os.path.splitext(inFile)
 			f_name = f_name.replace('_2merge_','')
-			outFile = f_name+'_jumpcut_merge_'+'.mp4'
+			outFile = f_name+'_jumpcut_merge_'+jumpcut_suffix+'.mp4'
 			if os.path.exists(outFile):
 				print(f'{outFile} is already existed')
 			else:

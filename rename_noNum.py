@@ -11,7 +11,7 @@ def nameList_F_withExt_byTime(InputFolder,filterString="*"):
 	return nameList
 
 #sort by time and rename
-for idx,f in enumerate(nameList_F_withExt_byTime(current_dir,'*.wmv')):
+for idx,f in enumerate(nameList_F_withExt_byTime(current_dir,'*.mp4')):
 	# print(f)
 	f_name,f_ext = os.path.splitext(f)
 	temp_name = f_name.replace('Định vị và đo sâu biển','Dinh vi va do sau bien')
